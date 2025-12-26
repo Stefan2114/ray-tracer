@@ -7,17 +7,17 @@ import (
 )
 
 type Lambertian struct {
-	albedo *vec3.Vector
+	Albedo *vec3.Vector
 }
 
-func NewLambertian(albedo *vec3.Vector) *Lambertian {
-	return &Lambertian{albedo: albedo}
+func NewLambertian(Albedo *vec3.Vector) *Lambertian {
+	return &Lambertian{Albedo: Albedo}
 }
 
 func (l *Lambertian) Scatter(_ *ray.Ray, rec *HitRecord) (attenuation *vec3.Vector, scattered *ray.Ray, ok bool) {
 	target := rec.P.Plus(rec.Normal).Plus(utils.RandomInUnitSphere())
 	scattered = ray.NewRay(rec.P, target.Minus(rec.P))
-	attenuation = l.albedo
+	attenuation = l.Albedo
 	return attenuation, scattered, true
 }
 

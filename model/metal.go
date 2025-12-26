@@ -7,24 +7,24 @@ import (
 )
 
 type Metal struct {
-	albedo *vec3.Vector
-	fuzz   float64
+	Albedo *vec3.Vector
+	Fuzz   float64
 }
 
-func NewMetal(albedo *vec3.Vector, fuzz float64) *Metal {
-	m := &Metal{albedo: albedo}
-	if fuzz < 1 {
-		m.fuzz = fuzz
+func NewMetal(Albedo *vec3.Vector, Fuzz float64) *Metal {
+	m := &Metal{Albedo: Albedo}
+	if Fuzz < 1 {
+		m.Fuzz = Fuzz
 	} else {
-		m.fuzz = 1
+		m.Fuzz = 1
 	}
 	return m
 }
 func (m *Metal) Scatter(rIn *ray.Ray, rec *HitRecord) (attenuation *vec3.Vector, scattered *ray.Ray, ok bool) {
 	reflected := reflect(rIn.Direction().Unit(), rec.Normal)
-	direction := reflected.Plus(utils.RandomInUnitSphere().Scaled(m.fuzz))
+	direction := reflected.Plus(utils.RandomInUnitSphere().Scaled(m.Fuzz))
 	scattered = ray.NewRay(rec.P, direction)
-	attenuation = m.albedo
+	attenuation = m.Albedo
 	return attenuation, scattered, scattered.Direction().Dot(rec.Normal) > 0
 }
 

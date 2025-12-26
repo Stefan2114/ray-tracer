@@ -6,11 +6,11 @@ import (
 )
 
 type DiffuseLight struct {
-	emit *vec3.Vector
+	Emit *vec3.Vector
 }
 
 func NewDiffuseLight(color *vec3.Vector) *DiffuseLight {
-	return &DiffuseLight{emit: color}
+	return &DiffuseLight{Emit: color}
 }
 
 func (d *DiffuseLight) Scatter(rIn *ray.Ray, rec *HitRecord) (*vec3.Vector, *ray.Ray, bool) {
@@ -19,5 +19,5 @@ func (d *DiffuseLight) Scatter(rIn *ray.Ray, rec *HitRecord) (*vec3.Vector, *ray
 }
 
 func (d *DiffuseLight) Emitted(p *vec3.Vector) *vec3.Vector {
-	return d.emit
+	return d.Emit
 }

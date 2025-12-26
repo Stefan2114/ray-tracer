@@ -47,7 +47,7 @@ The image below was generated using a high-density scene with hundreds of random
 
 **Average Render Time**: ~1 minute 6 seconds
 
-*(Insert your render image here)*
+![Final Render](render.png)
 
 ## Usage
 
@@ -59,5 +59,5 @@ go run main.go -mode=threads
 ### With MPI
 ```bash
 go build -o ray-tracer .
-mpirun --map-by :OVERSUBSCRIBE -n 16 ./ray-tracer -mode=mpi
+mpirun --map-by :OVERSUBSCRIBE -n 24 ./ray-tracer -mode=mpi
 ```

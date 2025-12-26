@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"ray-tracer/camera"
 	"ray-tracer/config"
+	"ray-tracer/geo"
 	"ray-tracer/geo/vec3"
 	"ray-tracer/model"
 	"ray-tracer/render"
@@ -13,22 +14,38 @@ import (
 	"ray-tracer/utils"
 	"time"
 
-	mpi "github.com/sbromberger/gompi"
+	"ray-tracer/mpi"
 )
 
-func threadsMain(cfg config.RenderConfig, cam *camera.Camera, h model.Hittable) {
+func threadsMain(cfg config.RenderConfig, cam *camera.Camera) {
+
+	objs := scene.RandomScene()
+	h := model.NewBVHNode(objs, 0, 0)
+
 	start := time.Now()
 	img := render.Render(cfg, cam, h)
 	fmt.Printf("Time taken to render the image: %v", time.Since(start))
 	utils.SavePNG("render.png", img)
 }
 
-func mpiMain(cfg config.RenderConfig, cam *camera.Camera, h model.Hittable) {
+func mpiMain(cfg config.RenderConfig, cam *camera.Camera) {
 
-	render.MpiInit()
-	defer mpi.Stop()
-	rank := render.World.Rank()
+	mpi.MpiInit()
+	defer mpi.MpiStop()
+	rank := mpi.World.Rank()
+	worldFile := "scene_sync.json"
 
+	if rank == 0 {
+		hittableWorld := scene.RandomScene()
+		data := scene.TransformToData(hittableWorld)
+		geo.SaveWorld(worldFile, data)
+	}
+
+	mpi.World.Barrier()
+
+	data, _ := geo.LoadWorld(worldFile)
+	hittableWorld := scene.BuildWorldFromData(data)
+	h := model.NewBVHNode(hittableWorld, 0, 0)
 	start := time.Now()
 	img := render.RenderDistributed(cfg, cam, h)
 
@@ -39,6 +56,7 @@ func mpiMain(cfg config.RenderConfig, cam *camera.Camera, h model.Hittable) {
 }
 
 func main() {
+
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	//preview := config.RenderConfig{
@@ -77,16 +95,13 @@ func main() {
 		distToFocus,
 	)
 
-	objs := scene.RandomScene()
-	bvhWorld := model.NewBVHNode(objs, 0, 0)
-
 	modePtr := flag.String("mode", "threads", "The rendering mode: 'threads' or 'mpi'")
 	flag.Parse()
 	switch *modePtr {
 	case "mpi":
-		mpiMain(cfg, cam, bvhWorld)
+		mpiMain(cfg, cam)
 	case "threads":
-		threadsMain(cfg, cam, bvhWorld)
+		threadsMain(cfg, cam)
 	default:
 		fmt.Printf("Unknown mode: %s. Defaulting to threads.\n", *modePtr)
 	}

@@ -10,30 +10,30 @@ import (
 const SchlickPower = 5.0
 
 type Dielectric struct {
-	refIndex float64
+	RefIndex float64
 }
 
 func NewDielectric(ri float64) *Dielectric {
-	return &Dielectric{refIndex: ri}
+	return &Dielectric{RefIndex: ri}
 }
 func (d *Dielectric) Scatter(rIn *ray.Ray, rec *HitRecord) (attenuation *vec3.Vector, scattered *ray.Ray, ok bool) {
 	reflected := reflect(rIn.Direction(), rec.Normal)
 	attenuation = vec3.NewVector(1, 1, 1)
 	outWardNormal := rec.Normal
-	niOverNt := 1 / d.refIndex
+	niOverNt := 1 / d.RefIndex
 	cosine := -rIn.Direction().Dot(rec.Normal) / rIn.Direction().Len()
 
 	if rIn.Direction().Dot(rec.Normal) > 0 {
 		outWardNormal = outWardNormal.Inv()
-		niOverNt = d.refIndex
-		cosine = d.refIndex * rIn.Direction().Dot(rec.Normal) / rIn.Direction().Len()
+		niOverNt = d.RefIndex
+		cosine = d.RefIndex * rIn.Direction().Dot(rec.Normal) / rIn.Direction().Len()
 
 	}
 
 	var refracted *vec3.Vector
 	reflectProb := 1.0
 	if refracted, ok = refract(rIn.Direction(), outWardNormal, niOverNt); ok {
-		reflectProb = schlick(cosine, d.refIndex)
+		reflectProb = schlick(cosine, d.RefIndex)
 	}
 	if rand.Float64() < reflectProb {
 		scattered = ray.NewRay(rec.P, reflected)

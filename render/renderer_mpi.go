@@ -9,31 +9,24 @@ import (
 	"ray-tracer/config"
 	"ray-tracer/geo/vec3"
 	"ray-tracer/model"
+	"ray-tracer/mpi"
 	"ray-tracer/utils"
-
-	mpi "github.com/sbromberger/gompi"
 )
 
-var World *mpi.Communicator
-
-func MpiInit() {
-	mpi.Start(false)
-	World = mpi.NewCommunicator(nil)
-}
-
 func RenderDistributed(cfg config.RenderConfig, cam *camera.Camera, world model.Hittable) *image.RGBA {
-	rank := World.Rank()
-	size := World.Size()
+	rank := mpi.World.Rank()
+	size := mpi.World.Size()
 
 	if rank == 0 {
-		return master(cfg, cam, world, size)
+		return master(cfg, size)
 	} else {
 		worker(cfg, cam, world)
 		return nil
 	}
 }
 
-func master(cfg config.RenderConfig, cam *camera.Camera, world model.Hittable, worldSize int) *image.RGBA {
+func master(cfg config.RenderConfig, worldSize int) *image.RGBA {
+
 	img := image.NewRGBA(image.Rect(0, 0, cfg.Width, cfg.Height))
 	numWorkers := worldSize - 1
 	rowsPerWorker := cfg.Height / numWorkers
@@ -47,13 +40,13 @@ func master(cfg config.RenderConfig, cam *camera.Camera, world model.Hittable, w
 		}
 
 		// Send row range [start, end)
-		World.SendInt64s([]int64{int64(startRow), int64(endRow)}, i, 100)
+		mpi.World.SendInt64s([]int64{int64(startRow), int64(endRow)}, i, 100)
 	}
 
 	// 2. Collect data from workers
 	for i := 1; i < worldSize; i++ {
 		// Receive pixel data. Each pixel has 3 float64 components (R, G, B)
-		data, _ := World.RecvFloat64s(i, 200)
+		data, _ := mpi.World.RecvFloat64s(i, 200)
 
 		// Map received data back to the image
 		startRow := (i - 1) * rowsPerWorker
@@ -83,7 +76,7 @@ func master(cfg config.RenderConfig, cam *camera.Camera, world model.Hittable, w
 
 func worker(cfg config.RenderConfig, cam *camera.Camera, world model.Hittable) {
 	// Receive range
-	rangeData, _ := World.RecvInt64s(0, 100)
+	rangeData, _ := mpi.World.RecvInt64s(0, 100)
 	startRow, endRow := int(rangeData[0]), int(rangeData[1])
 
 	pixelBuffer := make([]float64, 0, (endRow-startRow)*cfg.Width*3)
@@ -98,7 +91,7 @@ func worker(cfg config.RenderConfig, cam *camera.Camera, world model.Hittable) {
 	}
 
 	// Send buffer back to master
-	World.SendFloat64s(pixelBuffer, 0, 200)
+	mpi.World.SendFloat64s(pixelBuffer, 0, 200)
 }
 
 func samplePixelRaw(i, j int, cfg config.RenderConfig, cam *camera.Camera, world model.Hittable) *vec3.Vector {
