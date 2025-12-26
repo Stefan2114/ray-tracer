@@ -2,7 +2,7 @@
 
 A path tracer implemented in Go, based on the foundational architecture described in **"Ray Tracing in One Weekend"** by Peter Shirley. This project explores the fundamental geometry, physics, and computer science principles required to generate photorealistic images from scratch without a graphics API.
 
-## 📖 Theoretical Foundations
+## Theoretical Foundations
 
 This implementation follows the logic of a **Path Tracer**, a general form of ray tracing that simulates the indirect lighting found in modern cinema.
 
@@ -24,7 +24,7 @@ The project implements an abstract material system where each material dictates 
 * **Dielectrics**: Clear materials like glass split light into reflected and refracted rays using **Snell's Law**. We use **Schlick's Approximation** to vary reflectivity based on the viewing angle, making glass look more like a mirror at steep angles.
 * **Light Emitters**: Lighting can be added implicitly by making objects emit their own color, which then contributes to the final pixel through scattering.
 
-## 🛠 Project Architecture
+## Project Architecture
 
 This Go implementation organizes the tutorial's logic into modular packages:
 
@@ -34,7 +34,7 @@ This Go implementation organizes the tutorial's logic into modular packages:
 * **/scene**: Logic for building complex worlds, including the high-count "Random Scene" cover image.
 * **/render**: Handles the path tracing loop and antialiasing by averaging multiple samples per pixel.
 
-## 🖼 Final Render & Performance
+## Final Render & Performance
 
 The image below was generated using a high-density scene with hundreds of random spheres. To manage performance, a **Bounding Volume Hierarchy (BVH)** was implemented, which reduces the intersection search from linear $O(N)$ to logarithmic $O(log N)$ complexity.
 
